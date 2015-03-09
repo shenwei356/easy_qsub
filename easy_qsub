@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+
+import argparse
+import logging
+import os
+# import sys
+# import subprocess
+import tempfile
+from string import Template
+from datetime import date
+from multiprocessing import cpu_count
+
+template_dir = os.path.join(os.path.expanduser('~'), '.easy_qsub')
+template_default = os.path.join(template_dir, 'default.pbs')
+template_default_text = '''#PBS -S /bin/bash
+#PBS -N $name
+#PBS -q $queue
+#PBS -l ncpus=$ncpus
+#PBS -l mem=$mem
+#PBS -l walltime=$walltime
+#PBS -V
+
+cd $$PBS_O_WORKDIR;
+echo run on node: $$HOSTNAME >&2
+
+$cmd
+
+'''
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='qsub with template',
+                                     epilog="https://github.com/shenwei356/easy_qsub")
+
+    parser.add_argument('-v', '--verbose', help='verbosely print information',
+                        action="count", default=0)
+    parser.add_argument('cmd', type=str, help='command to submit')
+    parser.add_argument('-N', '--name', type=str, default="easy_qsub",
+                        help='job name')
+    parser.add_argument('-n', '--ncpus', type=int, default=cpu_count(),
+                        help='cpu number')
+    parser.add_argument('-m', '--mem', type=str, default='14gb',
+                        help='memory')
+    parser.add_argument('-q', '--queue', type=str, default='batch',
+                        help='queue')
+    parser.add_argument('-w', '--walltime', type=str, default='24:00:00',
+                        help='walltime')
+    parser.add_argument('-t', '--template', type=str, default=template_default,
+                        help='template script')
+    parser.add_argument('-o', '--outfile', type=str, help='output script')
+
+    args = parser.parse_args()
+
+    if not args.template:
+        args.template = template_default
+
+    # logging level
+    if args.verbose >= 2:
+        level = logging.DEBUG
+    elif args.verbose == 1:
+        level = logging.INFO
+    else:
+        level = logging.INFO
+    logging.basicConfig(level=level, format="[%(levelname)s] %(message)s")
+
+    return args
+
+
+def check_default_template():
+    if not os.path.exists(template_dir):
+        os.mkdir(template_dir)
+    if not os.path.exists(template_default) or args.verbose > 1:
+        with open(template_default, 'wt') as fh:
+            fh.write(template_default_text)
+
+
+def generate_script(args):
+    file_template = args.template
+    if not os.path.exists(file_template):
+        logging.warning("Template file not found: {}. Use default template instead.".format(file_template))
+        file_template = template_default
+    template = Template(''.join(open(file_template, 'rt').readlines()))
+
+    file_script = args.outfile
+    if not file_script:
+        tmpdir = os.path.join(tempfile.gettempdir(), 'easy_qsub')
+        if not os.path.exists(tmpdir):
+            os.mkdir(tmpdir)
+        (_, file_script) = tempfile.mkstemp(prefix=str(date.today()) + '_', suffix='.qsub', dir=tmpdir)
+
+    open(file_script, 'wt').write(template.substitute({'name': args.name, 'mem': args.mem, 'queue': args.queue,
+                                                       'ncpus': args.ncpus, 'walltime': args.walltime,
+                                                       'cmd': args.cmd}))
+
+    return file_script
+
+
+def submit_job(script):
+    cmd = 'qsub {}'.format(file_script)
+    # jobid = subprocess.getoutput(cmd).split('.')[0]
+    os.system(cmd)
+
+
+if __name__ == '__main__':
+    args = parse_args()
+
+    check_default_template()
+
+    file_script = generate_script(args)
+    logging.info("create script: {}".format(file_script))
+
+    submit_job(file_script)
+
