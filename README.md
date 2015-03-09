@@ -3,7 +3,7 @@
 Easily submit PBS job with script template, avoid repeatedly editing PBS scripts.
 
 Inspired by [qtask](https://github.com/mbreese/qtask), support for multiple input
-files is added (See example 2).). If "{}" appears in a command, it will be replaced
+files is added (**See example 2)**.). If "{}" appears in a command, it will be replaced
 with the current filename. Four formats are supported.
 For example, for a file named "/path/reads.fq.gz":
 
@@ -54,7 +54,7 @@ echo run: $cmd >&2
 $cmd
 ```
 
-Generated scripts are save in ```/tmp/easy_qsub```.
+Generated scripts are saved in ```/tmp/easy_qsub```.
 
 ## Installation
 
