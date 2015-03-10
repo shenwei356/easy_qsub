@@ -54,7 +54,7 @@ echo run: $cmd >&2
 $cmd
 ```
 
-Generated scripts are saved in ```/tmp/easy_qsub```.
+Generated scripts are saved in ```/tmp/easy_qsub-user```.
 
 ## Installation
 

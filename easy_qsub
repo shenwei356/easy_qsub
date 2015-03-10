@@ -45,7 +45,7 @@ def parse_args():
                         help='job name')
     parser.add_argument('-n', '--ncpus', type=int, default=cpu_count(),
                         help='cpu number')
-    parser.add_argument('-m', '--mem', type=str, default='14gb',
+    parser.add_argument('-m', '--mem', type=str, default='2gb',
                         help='memory')
     parser.add_argument('-q', '--queue', type=str, default='batch',
                         help='queue')
@@ -145,6 +145,10 @@ if __name__ == '__main__':
                             repl = file
                     elif c[0] == '%':
                         repl = os.path.basename(file)
+                    else:
+                        logging.error("unsupported fromat: {}".format(c))
+                        sys.exit(1)
+
                     cmd = pattern.sub(repl, cmd, 1)
 
                 if args.verbose > 1:
