@@ -7,6 +7,7 @@ import sys
 import re
 import tempfile
 import copy
+import getpass
 from string import Template
 from datetime import date
 from multiprocessing import cpu_count
@@ -91,7 +92,7 @@ def generate_script(args):
 
     file_script = args.outfile
     if not file_script:
-        tmpdir = os.path.join(tempfile.gettempdir(), 'easy_qsub')
+        tmpdir = os.path.join(tempfile.gettempdir(), 'easy_qsub-'+getpass.getuser())
         if not os.path.exists(tmpdir):
             os.mkdir(tmpdir)
         (_, file_script) = tempfile.mkstemp(prefix=str(date.today()) + '_', suffix='.qsub', dir=tmpdir)
