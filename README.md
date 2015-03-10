@@ -72,19 +72,18 @@ Or
 ## Usage
 
 ```
-usage: easy_qsub [-h] [-v] [-N NAME] [-n NCPUS] [-m MEM] [-q QUEUE]
-                 [-w WALLTIME] [-t TEMPLATE] [-o OUTFILE]
-                 cmd [fileglob]
+usage: easy_qsub [-h] [-N NAME] [-n NCPUS] [-m MEM] [-q QUEUE] [-w WALLTIME]
+                 [-t TEMPLATE] [-o OUTFILE] [-v]
+                 command [files [files ...]]
 
-Easily submit job to pbs with template
+Easily submit PBS jobs with script template. Support multiple input files.
 
 positional arguments:
-  cmd                   command to submit
-  fileglob              file glob expression
+  command               command to submit
+  files                 input files
 
 optional arguments:
   -h, --help            show this help message and exit
-  -v, --verbose         verbosely print information
   -N NAME, --name NAME  job name
   -n NCPUS, --ncpus NCPUS
                         cpu number
@@ -97,6 +96,14 @@ optional arguments:
                         script template
   -o OUTFILE, --outfile OUTFILE
                         output script
+  -v, --verbose         verbosely print information. -vv for just printing
+                        command not creating scripts and submitting jobs
+
+Note: if "{}" appears in a command, it will be replaced with the current
+filename. More format supported: "{%}" for basename, "{^suffix}" for clipping
+"suffix", "{%^suffix}" for clipping suffix from basename. See more:
+https://github.com/shenwei356/easy_qsub
+
 ```
 
 ## Examples
@@ -107,7 +114,7 @@ optional arguments:
 
 2) Submit multiple jobs
 
-	easy_qsub -n 8 -m 2GB 'mkdir -p QC/{%^.fq.gz}.fastqc; zcat {} | fastqc -o QC/{%^.fq.gz}.fastqc stdin' reads/\*.fq.gz
+	easy_qsub -n 8 -m 2GB 'mkdir -p QC/{%^.fq.gz}.fastqc; zcat {} | fastqc -o QC/{%^.fq.gz}.fastqc stdin' reads/*.fq.gz
 
 
 ## Copyright
