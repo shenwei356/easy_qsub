@@ -32,7 +32,7 @@ $cmd
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Easily submit PBS jobs with script template. Multiple input files supported.',
+        description='Easily submitting PBS jobs with script template. Multiple input files supported.',
         epilog='Note: if "{}" appears in a command, it will be replaced with the current filename. ' +
                'More format supported: "{%}" for basename, "{^suffix}" for clipping "suffix", ' +
                '"{%^suffix}" for clipping suffix from basename. See more: https://github.com/shenwei356/easy_qsub')

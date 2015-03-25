@@ -1,9 +1,9 @@
 # easy_qsub
 
-Easily submiting PBS job with script template, avoid repeatedly editing PBS scripts.
+Easily submitting PBS job with script template, avoid repeatedly editing PBS scripts.
 
 Inspired by [qtask](https://github.com/mbreese/qtask), support for multiple input
-files is added (**See example 2)**.). If "{}" appears in a command, it will be replaced
+files is added (**See example 2), 3)**.). If "{}" appears in a command, it will be replaced
 with the current filename. Four formats are supported.
 For example, for a file named "/path/reads.fq.gz":
 
@@ -37,7 +37,7 @@ For example, for a file named "/path/reads.fq.gz":
 
 **[Update]** To making best use of the support for multiple input, a script ```splitdir``` is added to
 split directory into multiple directories by creating symbolic links or moving files.
-**It's useful for programs which take directory as input*.**
+**It's useful for programs which take directory as input.**
 
 Default template (```~/.easy_qsub/default.pbs```):
 
@@ -145,7 +145,7 @@ optional arguments:
 
     easy_qsub -n 8 -m 2GB 'mkdir -p QC/{%^.fq.gz}.fastqc; zcat {} | fastqc -o QC/{%^.fq.gz}.fastqc stdin' reads/*.fq.gz
 
-3) Supposing a directory ```rawdata``` containing *paired files* as below. 
+3) Supposing a directory ```rawdata``` containing **paired files** as below. 
 
 	rawdata/
 	├── A2_1.fq.gz
@@ -154,10 +154,10 @@ optional arguments:
 	└── A3_2.fq.gz
 
 And I have a program ```script.py```, which takes a directory as input and do some thing
-with the *paired files*. Command is like this, ```script.py dirA```.
+with the **paired files**. Command is like this, ```script.py dirA```.
 
-It is slow by submiting jobs like example 2), handing A2_*.fq.gz 
-and then A3_*.fq.gz. So we can split ```rawdata``` directory into multiple directories, and
+It is slow by submiting jobs like example 2), handing A2_\*.fq.gz 
+and then A3_、*.fq.gz. So we can split ```rawdata``` directory into multiple directories, and
 submit jobs for all directories.
 
 	splitdir -t 'sub' -s '_\d.fq.gz' rawdata/
