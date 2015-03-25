@@ -70,17 +70,17 @@ if __name__ == '__main__':
             lcs = longest_common_substring(lcs, file)
         args.suffix = lcs
 
-    files_prefixes = set(re.sub(args.suffix, '', file) for file in files_basenames)
+    files_prefixes = set(re.sub(args.suffix+'$', '', file) for file in files_basenames)
+
+    if os.path.exists(args.outdir):
+        if args.force:
+            shutil.rmtree(args.outdir)
+        else:
+            logging.warning("out directory exists: {}".format(args.outdir))
+            sys.exit(1)
 
     for prefix in files_prefixes:
         outdir = os.path.join(args.outdir, prefix)
-
-        if os.path.exists(outdir):
-            if args.force:
-                shutil.rmtree(outdir)
-            else:
-                logging.warning("directory exists: {}".format(dir))
-                sys.exit(1)
 
         os.makedirs(outdir)
 
