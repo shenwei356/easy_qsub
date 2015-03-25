@@ -160,7 +160,7 @@ It is slow by submiting jobs like example 2), handing A2_\*.fq.gz
 and then A3_、*.fq.gz. So we can split ```rawdata``` directory into multiple directories, and
 submit jobs for all directories.
 
-	splitdir -t 'sub' -s '_\d.fq.gz' rawdata/
+	splitdir -s '_\d.fq.gz' rawdata/
 	
 	$ tree
 	.
