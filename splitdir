@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
-import logging
 import sys
 import os
 import shutil
 import glob
-import logging
 import re
+import logging
 
 args = None
 
@@ -19,10 +18,10 @@ def parse_args():
                                      epilog="https://github.com/shenwei356/bio_scripts")
 
     parser.add_argument('indir', type=str, help='source directory')
-    parser.add_argument('-t', '--tag', type=str, help='output directory tag')
+    parser.add_argument('-o', '--outdir', type=str, help='out directory')
     parser.add_argument('-s', '--suffix', type=str,
-                        help='files/dirs common suffix (regular expression). if not given, ' +
-                             'it will be the longest common substring of the files')
+                        help='common suffix (regular expression) of files/dirs indir. ' +
+                             'if not given, it will be the longest common substring of the files')
     parser.add_argument('-m', '--mv', action='store_true',
                         help='moving files instead of creating symbolic links')
     parser.add_argument("-f", "--force", action="store_true",
@@ -32,8 +31,9 @@ def parse_args():
 
     args.indir = os.path.normpath(args.indir)
 
-    if not args.tag:
-        args.tag = 'sub'
+    if not args.outdir:
+        args.outdir = args.indir + '.split'
+    args.outdir = os.path.normpath(args.outdir)
 
     return args
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     files_prefixes = set(re.sub(args.suffix, '', file) for file in files_basenames)
 
     for prefix in files_prefixes:
-        outdir = '{}.{}.{}'.format(args.indir, args.tag, prefix)
+        outdir = os.path.join(args.outdir, prefix)
 
         if os.path.exists(outdir):
             if args.force:
@@ -82,13 +82,13 @@ if __name__ == '__main__':
                 logging.warning("directory exists: {}".format(dir))
                 sys.exit(1)
 
-        os.mkdir(outdir)
+        os.makedirs(outdir)
 
         files = glob.glob(os.path.join(args.indir, prefix) + '*')
         for file in files:
             if args.mv:  # moving file
                 shutil.move(file, outdir)
             else:  # creating symbolic links
-                file = os.path.join('..', file)
                 link_name = os.path.join(outdir, os.path.basename(file))
-                os.symlink(file, link_name)
+                source = os.path.relpath(os.path.abspath(file), outdir)
+                os.symlink(source, link_name)

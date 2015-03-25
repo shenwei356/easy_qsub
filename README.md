@@ -114,7 +114,7 @@ https://github.com/shenwei356/easy_qsub
 splitdir
 
 ```
-usage: splitdir [-h] [-t TAG] [-s SUFFIX] [-m] [-f] indir
+usage: splitdir [-h] [-o OUTDIR] [-s SUFFIX] [-m] [-f] indir
 
 Split directory
 
@@ -123,15 +123,15 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -t TAG, --tag TAG     output directory tag
+  -o OUTDIR, --outdir OUTDIR
+                        out directory
   -s SUFFIX, --suffix SUFFIX
-                        files/dirs common suffix (regular expression). if not
-                        given, it will be the longest common substring of the
-                        files
+                        common suffix (regular expression) of files/dirs
+                        indir. if not given, it will be the longest common
+                        substring of the files
   -m, --mv              moving files instead of creating symbolic links
   -f, --force           force file overwriting, i.e. deleting existed out
                         directory
-
 ```
 
 
@@ -163,20 +163,21 @@ submit jobs for all directories.
 	splitdir -t 'sub' -s '_\d.fq.gz' rawdata/
 	
 	$ tree
-	.                                                                                                      
-	├── rawdata                                                                                            
-	│   ├── A2_1.fq.gz                                                                                     
+	.
+	├── rawdata
+	│   ├── A2_1.fq.gz
 	│   ├── A2_2.fq.gz
 	│   ├── A3_1.fq.gz
 	│   └── A3_2.fq.gz
-	├── rawdata.sub.A2
-	│   ├── A2_1.fq.gz -> ../rawdata/A2_1.fq.gz
-	│   └── A2_2.fq.gz -> ../rawdata/A2_2.fq.gz
-	└── rawdata.sub.A3
-		├── A3_1.fq.gz -> ../rawdata/A3_1.fq.gz
-		└── A3_2.fq.gz -> ../rawdata/A3_2.fq.gz
+	└── rawdata.split
+		├── A2
+		│   ├── A2_1.fq.gz -> ../../rawdata/A2_1.fq.gz
+		│   └── A2_2.fq.gz -> ../../rawdata/A2_2.fq.gz
+		└── A3
+			├── A3_1.fq.gz -> ../../rawdata/A3_1.fq.gz
+			└── A3_2.fq.gz -> ../../rawdata/A3_2.fq.gz
 	
-	easy_qsub 'script.py {}' rawdata.sub.*
+	easy_qsub 'script.py {}' rawdata.split/*
 
 ## Copyright
 
