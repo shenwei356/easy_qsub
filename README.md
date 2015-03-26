@@ -35,7 +35,7 @@ For example, for a file named "/path/reads.fq.gz":
     </tr>
 </table>
 
-**[Update]** It also supports runing commands locally with option ```-lp``` (parallelly) or ```-ls``` (serially) 
+**[Update]** It also support runing commands locally with option ```-lp``` (parallelly) or ```-ls``` (serially) 
 for **multiple inputs**.
 
 **[Update]** To making best use of the support for multiple input, a script ```splitdir``` is added to
@@ -148,7 +148,12 @@ optional arguments:
 
 2) Submit multiple jobs, runing fastqc for a lot of fq.gz files
 
-    easy_qsub -n 8 -m 2GB 'mkdir -p QC/{%^.fq.gz}.fastqc; zcat {} | fastqc -o QC/{%^.fq.gz}.fastqc stdin' reads/*.fq.gz
+    easy_qsub -n 8 -m 2GB 'mkdir -p QC/{%^.fq.gz}.fastqc; zcat {} | fastqc -o QC/{%^.fq.gz}.fastqc stdin' *.fq.gz
+   
+Excuted commands are:
+
+	mkdir -p QC/read_1.fastqc; zcat read_1.fq.gz | fastqc -o QC/read_1.fastqc stdin
+	mkdir -p QC/read_2.fastqc; zcat read_2.fq.gz | fastqc -o QC/read_2.fastqc stdin
 
 3) Supposing a directory ```rawdata``` containing **paired files** as below. 
 

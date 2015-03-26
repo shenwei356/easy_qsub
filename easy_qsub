@@ -111,7 +111,7 @@ def submit_job(args):
     file_script = generate_script(args)
     logging.info("create script: {} with command: {}".format(file_script, args.command))
 
-    cmd = 'qsub {}'.format(generate_script(args))
+    cmd = 'qsub {}'.format(file_script)
     os.system(cmd)
 
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
                     else:
                         args_copy = copy.copy(args)
                         args_copy.command = cmd
-                        submit_job(args)
+                        submit_job(args_copy)
 
             # local run
             if args.local_p:
