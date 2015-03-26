@@ -10,7 +10,7 @@ import copy
 import getpass
 from string import Template
 from datetime import date
-from multiprocessing import cpu_count
+from multiprocessing import cpu_count, Pool
 
 template_dir = os.path.join(os.path.expanduser('~'), '.easy_qsub')
 template_default = os.path.join(template_dir, 'default.pbs')
@@ -40,16 +40,20 @@ def parse_args():
     parser.add_argument('command', type=str, help='command to submit')
     parser.add_argument('files', type=str, nargs='*', help='input files')
 
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-lp', '--local_p', action='store_true', help='run commands locally, parallelly')
+    group.add_argument('-ls', '--local_s', action='store_true', help='run commands locally, serially')
+
     parser.add_argument('-N', '--name', type=str, default="easy_qsub",
                         help='job name')
     parser.add_argument('-n', '--ncpus', type=int, default=cpu_count(),
-                        help='cpu number')
+                        help='cpu number [logical cpu number]')
     parser.add_argument('-m', '--mem', type=str, default='2gb',
-                        help='memory')
+                        help='memory [2gb]')
     parser.add_argument('-q', '--queue', type=str, default='batch',
-                        help='queue')
+                        help='queue [batch]')
     parser.add_argument('-w', '--walltime', type=str, default='24:00:00',
-                        help='walltime')
+                        help='walltime [24:00:00]')
     parser.add_argument('-t', '--template', type=str, default=template_default,
                         help='script template')
     parser.add_argument('-o', '--outfile', type=str, help='output script')
@@ -103,9 +107,11 @@ def generate_script(args):
     return file_script
 
 
-def submit_job(script):
-    cmd = 'qsub {}'.format(file_script)
-    # jobid = subprocess.getoutput(cmd).split('.')[0]
+def submit_job(args):
+    file_script = generate_script(args)
+    logging.info("create script: {} with command: {}".format(file_script, args.command))
+
+    cmd = 'qsub {}'.format(generate_script(args))
     os.system(cmd)
 
 
@@ -119,6 +125,8 @@ if __name__ == '__main__':
     matched = pattern.findall(args.command)
     if matched:
         if args.files:
+            cmds = list()  # for local run
+
             for file in args.files:
                 if not os.path.exists(file):
                     logging.error('file not found: {}'.format(file))
@@ -153,11 +161,23 @@ if __name__ == '__main__':
                 if args.verbose > 1:
                     logging.debug('command: {}'.format(cmd))
                 else:
-                    args_copy = copy.copy(args)
-                    args_copy.command = cmd
-                    file_script = generate_script(args_copy)
-                    logging.info("create script: {} with command: {}".format(file_script, cmd))
-                    submit_job(file_script)
+                    if args.local_p or args.local_s:
+                        cmds.append(cmd)
+                    else:
+                        args_copy = copy.copy(args)
+                        args_copy.command = cmd
+                        submit_job(args)
+
+            # local run
+            if args.local_p:
+                pool = Pool(processes=cpu_count())
+                pool.map(os.system, cmds)
+                pool.close()
+                pool.join()
+            elif args.local_s:
+                for cmd in cmds:
+                    os.system(cmd)
+
         else:
             logging.error("'{}' found in command, but no file glob expression given")
             sys.exit(1)
@@ -170,6 +190,7 @@ if __name__ == '__main__':
             if args.verbose > 1:
                 logging.debug('command: {}'.format(args.command))
             else:
-                file_script = generate_script(args)
-                logging.info("create script: {} with command: {}".format(file_script, args.command))
-                submit_job(file_script)
+                if args.local_p or args.local_s:
+                    os.system(args.command)
+                else:
+                    submit_job(args)

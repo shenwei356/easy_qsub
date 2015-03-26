@@ -2,8 +2,8 @@
 
 Easily submitting PBS job with script template, avoid repeatedly editing PBS scripts.
 
-Inspired by [qtask](https://github.com/mbreese/qtask), support for multiple input
-files is added (**See example 2), 3)**.). If "{}" appears in a command, it will be replaced
+Inspired by [qtask](https://github.com/mbreese/qtask), support for **multiple inputs** 
+is added (**See example 2), 3)**.). If "{}" appears in a command, it will be replaced
 with the current filename. Four formats are supported.
 For example, for a file named "/path/reads.fq.gz":
 
@@ -34,6 +34,9 @@ For example, for a file named "/path/reads.fq.gz":
         <td>reads</td>
     </tr>
 </table>
+
+**[Update]** It also supports runing commands locally with option ```-lp``` (parallelly) or ```-ls``` (serially) 
+for **multiple inputs**.
 
 **[Update]** To making best use of the support for multiple input, a script ```splitdir``` is added to
 split directory into multiple directories by creating symbolic links or moving files.
@@ -77,26 +80,29 @@ Or
 easy_qsub
 
 ```
-usage: easy_qsub [-h] [-N NAME] [-n NCPUS] [-m MEM] [-q QUEUE] [-w WALLTIME]
-                 [-t TEMPLATE] [-o OUTFILE] [-v]
-                 command [files [files ...]]
-
-Easily submit PBS jobs with script template. Multiple input files supported.
-
-positional arguments:
-  command               command to submit
+usage: easy_qsub [-h] [-lp | -ls] [-N NAME] [-n NCPUS] [-m MEM] [-q QUEUE]                          
+                 [-w WALLTIME] [-t TEMPLATE] [-o OUTFILE] [-v]                                      
+                 command [files [files ...]]                                                        
+                                                                                                    
+Easily submitting PBS jobs with script template. Multiple input files                               
+supported.                                                                                          
+                                                                                                    
+positional arguments:                                                                               
+  command               command to submit                                                           
   files                 input files
 
 optional arguments:
   -h, --help            show this help message and exit
+  -lp, --local_p        run commands locally, parallelly
+  -ls, --local_s        run commands locally, serially
   -N NAME, --name NAME  job name
   -n NCPUS, --ncpus NCPUS
-                        cpu number
-  -m MEM, --mem MEM     memory
+                        cpu number [logical cpu number]
+  -m MEM, --mem MEM     memory [2gb]
   -q QUEUE, --queue QUEUE
-                        queue
+                        queue [batch]
   -w WALLTIME, --walltime WALLTIME
-                        walltime
+                        walltime [24:00:00]
   -t TEMPLATE, --template TEMPLATE
                         script template
   -o OUTFILE, --outfile OUTFILE
@@ -108,7 +114,6 @@ Note: if "{}" appears in a command, it will be replaced with the current
 filename. More format supported: "{%}" for basename, "{^suffix}" for clipping
 "suffix", "{%^suffix}" for clipping suffix from basename. See more:
 https://github.com/shenwei356/easy_qsub
-
 ```
 
 splitdir
