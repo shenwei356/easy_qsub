@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
             # local run
             if args.local_p:
-                pool = Pool(processes=cpu_count())
+                pool = Pool(processes=args.ncpus)
                 pool.map(os.system, cmds)
                 pool.close()
                 pool.join()
