@@ -65,7 +65,7 @@ Generated scripts are saved in ```/tmp/easy_qsub-user```.
 ## Installation
 
 easy_qsub is a single script written in Python using standard library. 
-It's Python 2/3 compatible.
+It's Python 2/3 compatible, version 2.7 or later.
 
 You can simply save the [script](https://raw.githubusercontent.com/shenwei356/easy_qsub/master/easy_qsub)
 to directory included in environment PATH, e.g ```/usr/local/bin```.

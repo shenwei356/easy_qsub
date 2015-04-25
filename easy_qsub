@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# python >= 2.7
 import argparse
 import logging
 import os
@@ -8,6 +8,8 @@ import re
 import tempfile
 import copy
 import getpass
+import subprocess
+import shutil
 from string import Template
 from datetime import date
 from multiprocessing import cpu_count, Pool
@@ -48,12 +50,12 @@ def parse_args():
                         help='job name')
     parser.add_argument('-n', '--ncpus', type=int, default=cpu_count(),
                         help='cpu number [logical cpu number]')
-    parser.add_argument('-m', '--mem', type=str, default='2gb',
-                        help='memory [2gb]')
+    parser.add_argument('-m', '--mem', type=str, default='5gb',
+                        help='memory [5gb]')
     parser.add_argument('-q', '--queue', type=str, default='batch',
                         help='queue [batch]')
-    parser.add_argument('-w', '--walltime', type=str, default='24:00:00',
-                        help='walltime [24:00:00]')
+    parser.add_argument('-w', '--walltime', type=str, default='30:00:00:00',
+                        help='walltime [30:00:00:00]')
     parser.add_argument('-t', '--template', type=str, default=template_default,
                         help='script template')
     parser.add_argument('-o', '--outfile', type=str, help='output script')
@@ -95,7 +97,7 @@ def generate_script(args):
 
     file_script = args.outfile
     if not file_script:
-        tmpdir = os.path.join(tempfile.gettempdir(), 'easy_qsub-'+getpass.getuser())
+        tmpdir = os.path.join(tempfile.gettempdir(), 'easy_qsub-' + getpass.getuser())
         if not os.path.exists(tmpdir):
             os.mkdir(tmpdir)
         (_, file_script) = tempfile.mkstemp(prefix=str(date.today()) + '_', suffix='.qsub', dir=tmpdir)
@@ -112,7 +114,27 @@ def submit_job(args):
     logging.info("create script: {} with command: {}".format(file_script, args.command))
 
     cmd = 'qsub {}'.format(file_script)
-    os.system(cmd)
+    # os.system(cmd)
+
+    output = ''
+    try:
+        if sys.version_info[0] == 3:
+            output = subprocess.getoutput(cmd) # bug: fail to catch the exception
+        else:
+            output = subprocess.check_output(cmd.split())
+    except:
+        logging.error("fail to run: {}".format(cmd))
+        sys.exit(1)
+
+    print(output)
+
+    jobid = output.split('.')[0]
+    if not re.match('^\d+$', jobid):
+        logging.error("fail to run: {}".format(cmd))
+        sys.exit(1)
+
+    if os.access('./', os.W_OK):
+        shutil.move(file_script, '{}.s{}'.format(args.name, jobid))
 
 
 if __name__ == '__main__':
