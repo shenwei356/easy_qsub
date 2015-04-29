@@ -83,7 +83,7 @@ def parse_args():
 def check_default_template():
     if not os.path.exists(template_dir):
         os.mkdir(template_dir)
-    if not os.path.exists(template_default) or args.verbose > 1:
+    if not os.path.exists(template_default):
         with open(template_default, 'wt') as fh:
             fh.write(template_default_text)
 
