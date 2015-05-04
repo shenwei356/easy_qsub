@@ -124,6 +124,7 @@ def submit_job(args):
             output = subprocess.check_output(cmd.split())
     except:
         logging.error("fail to run: {}".format(cmd))
+        os.remove(file_script)
         sys.exit(1)
 
     print(output)
@@ -131,6 +132,7 @@ def submit_job(args):
     jobid = output.split('.')[0]
     if not re.match('^\d+$', jobid):
         logging.error("fail to run: {}".format(cmd))
+        os.remove(file_script)
         sys.exit(1)
 
     if os.access('./', os.W_OK):
