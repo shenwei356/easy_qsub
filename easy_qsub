@@ -152,9 +152,9 @@ if __name__ == '__main__':
             cmds = list()  # for local run
 
             for file in args.files:
-                if not os.path.exists(file):
-                    logging.error('file not found: {}'.format(file))
-                    sys.exit(1)
+                # if not os.path.exists(file):
+                #     logging.error('file not found: {}'.format(file))
+                #     sys.exit(1)
 
                 cmd = args.command
                 for c in matched:
