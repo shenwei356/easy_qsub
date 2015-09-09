@@ -70,7 +70,7 @@ if __name__ == '__main__':
             lcs = longest_common_substring(lcs, file)
         args.suffix = lcs
 
-    files_prefixes = set(re.sub(args.suffix+'$', '', file) for file in files_basenames)
+    files_prefixes = set(re.sub(args.suffix+'$', '', file) for file in files_basenames if re.search(args.suffix+'$', file))
 
     if os.path.exists(args.outdir):
         if args.force:
