@@ -14,14 +14,17 @@ args = None
 def parse_args():
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-    parser = argparse.ArgumentParser(description='Split directory',
+    parser = argparse.ArgumentParser(description='split directory and cluster files by common prefix [V2.0]',
                                      epilog="https://github.com/shenwei356/bio_scripts")
 
     parser.add_argument('indir', type=str, help='source directory')
-    parser.add_argument('-o', '--outdir', type=str, help='out directory')
+    parser.add_argument('-o', '--outdir', type=str, help='out directory [indir.split]')
     parser.add_argument('-s', '--suffix', type=str,
                         help='common suffix (regular expression) of files/dirs indir. ' +
-                             'if not given, it will be the longest common substring of the files')
+                             'if not given, it will be the longest common substring of the files.' +
+                             'if no files matched in a dir, it will be ignored.')
+    parser.add_argument('-k', '--keep', action='store_true',
+                        help='keep original dir structure')
     parser.add_argument('-m', '--mv', action='store_true',
                         help='moving files instead of creating symbolic links')
     parser.add_argument("-f", "--force", action="store_true",
@@ -56,39 +59,58 @@ def longest_common_substring(s1, s2):
 if __name__ == '__main__':
     args = parse_args()
 
-    files = glob.glob(args.indir + '/*')
+    targets = list()
 
-    if len(files) < 2:
-        logging.error("less than two files/directories found in source directory: {}".format(args.indir))
+    def walk_func(_, dir, files):
+        basenames = [os.path.basename(file) for file in files]
+        if not args.suffix:
+            lcs = basenames[0]
+            for file in basenames[1:]:
+                lcs = longest_common_substring(lcs, file)
+            args.suffix = lcs
+
+        prefixes = set(re.sub(args.suffix + '$', '', file) for file in basenames if re.search(args.suffix + '$', file))
+        if len(prefixes) == 0:
+            return
+
+        files = [os.path.join(dir, file) for file in files if re.search(args.suffix + '$', file)]
+        targets.append([dir, prefixes, files])
+
+    os.path.walk(args.indir, walk_func, ())
+
+    if len(targets) == 0:
+        logging.warning('no files match suffix: {}'.format(args.suffix))
         sys.exit(1)
-
-    files_basenames = [os.path.basename(file) for file in files]
-
-    if not args.suffix:
-        lcs = files_basenames[0]
-        for file in files_basenames[1:]:
-            lcs = longest_common_substring(lcs, file)
-        args.suffix = lcs
-
-    files_prefixes = set(re.sub(args.suffix+'$', '', file) for file in files_basenames if re.search(args.suffix+'$', file))
 
     if os.path.exists(args.outdir):
         if args.force:
             shutil.rmtree(args.outdir)
         else:
             logging.warning("out directory exists: {}".format(args.outdir))
-            sys.exit(1)
 
-    for prefix in files_prefixes:
-        outdir = os.path.join(args.outdir, prefix)
+    for dir, prefixes, files in targets:
+        for prefix in prefixes:
+            if args.keep:
+                splits = os.path.split(dir)
+                if not splits[0] == '':
+                    newdir = os.path.join(splits[1:])[0]
+                else:  # no subdir in args.indir
+                    newdir = ''
+            else:
+                newdir = ''
 
-        os.makedirs(outdir)
+            outdir = os.path.join(args.outdir, newdir, prefix)
 
-        files = glob.glob(os.path.join(args.indir, prefix) + '*')
-        for file in files:
-            if args.mv:  # moving file
-                shutil.move(file, outdir)
-            else:  # creating symbolic links
-                link_name = os.path.join(outdir, os.path.basename(file))
-                source = os.path.relpath(os.path.abspath(file), outdir)
-                os.symlink(source, link_name)
+            if os.path.exists(outdir):
+                shutil.rmtree(outdir)
+            os.makedirs(outdir)
+
+            for file in files:
+                if not re.match(prefix, os.path.basename(file)):
+                    continue
+                if args.mv:  # moving file
+                    shutil.move(file, outdir)
+                else:  # creating symbolic links
+                    link_name = os.path.join(outdir, os.path.basename(file))
+                    source = os.path.relpath(os.path.abspath(file), outdir)
+                    os.symlink(source, link_name)

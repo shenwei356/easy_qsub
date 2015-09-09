@@ -119,9 +119,9 @@ https://github.com/shenwei356/easy_qsub
 splitdir
 
 ```
-usage: splitdir [-h] [-o OUTDIR] [-s SUFFIX] [-m] [-f] indir
+usage: splitdir [-h] [-o OUTDIR] [-s SUFFIX] [-k] [-m] [-f] indir
 
-Split directory
+split directory and cluster files by common prefix [V2.0]
 
 positional arguments:
   indir                 source directory
@@ -129,14 +129,17 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -o OUTDIR, --outdir OUTDIR
-                        out directory
+                        out directory [indir.split]
   -s SUFFIX, --suffix SUFFIX
                         common suffix (regular expression) of files/dirs
                         indir. if not given, it will be the longest common
-                        substring of the files
+                        substring of the files.if no files matched in a dir,
+                        it will be ignored.
+  -k, --keep            keep original dir structure
   -m, --mv              moving files instead of creating symbolic links
   -f, --force           force file overwriting, i.e. deleting existed out
                         directory
+
 ```
 
 
@@ -156,38 +159,73 @@ Excuted commands are:
 	mkdir -p QC/read_2.fastqc; zcat read_2.fq.gz | fastqc -o QC/read_2.fastqc stdin
 
 3) Supposing a directory ```rawdata``` containing **paired files** as below. 
+    
+    $ tree rawdata
+    rawdata
+    ├── A2_1.fq.gz
+    ├── A2_1.unpared.fq.gz
+    ├── A2_2.fq.gz
+    ├── A2_2.unpared.fq.gz
+    ├── A3_1.fq.gz
+    ├── A3_1.unpared.fq.gz
+    ├── A3_2.fq.gz
+    ├── A3_2.unpared.fq.gz
+    └── README.md
 
-	rawdata/
-	├── A2_1.fq.gz
-	├── A2_2.fq.gz
-	├── A3_1.fq.gz
-	└── A3_2.fq.gz
 
 And I have a program ```script.py```, which takes a directory as input and do some thing
 with the **paired files**. Command is like this, ```script.py dirA```.
 
 It is slow by submiting jobs like example 2), handing A2_\*.fq.gz 
-and then A3_、*.fq.gz. So we can split ```rawdata``` directory into multiple directories, and
+and then A3_\*.fq.gz. So we can split ```rawdata``` directory into multiple directories, and
 submit jobs for all directories.
 
-	splitdir -s '_\d.fq.gz' rawdata/
+	splitdir -s '_\d\.fq\.gz' -f rawdata/
 	
-	$ tree
-	.
-	├── rawdata
-	│   ├── A2_1.fq.gz
-	│   ├── A2_2.fq.gz
-	│   ├── A3_1.fq.gz
-	│   └── A3_2.fq.gz
-	└── rawdata.split
-		├── A2
-		│   ├── A2_1.fq.gz -> ../../rawdata/A2_1.fq.gz
-		│   └── A2_2.fq.gz -> ../../rawdata/A2_2.fq.gz
-		└── A3
-			├── A3_1.fq.gz -> ../../rawdata/A3_1.fq.gz
-			└── A3_2.fq.gz -> ../../rawdata/A3_2.fq.gz
-	
+    tree rawdata.split/
+    rawdata.split/
+    ├── A2
+    │   ├── A2_1.fq.gz -> ../../rawdata/A2_1.fq.gz
+    │   └── A2_2.fq.gz -> ../../rawdata/A2_2.fq.gz
+    └── A3
+        ├── A3_1.fq.gz -> ../../rawdata/A3_1.fq.gz
+        └── A3_2.fq.gz -> ../../rawdata/A3_2.fq.gz
+    	
 	easy_qsub 'script.py {}' rawdata.split/*
+	
+4) Another example
+
+    tree rawdata2
+    rawdata2
+    ├── OtherDir
+    │   └── abc.fq.gz.txt
+    ├── S1
+    │   ├── A2_1.fq.gz
+    │   ├── A2_1.unpared.fq.gz
+    │   ├── A2_2.fq.gz
+    │   ├── A2_2.unpared.fq.gz
+    │   ├── A4_1.fq.gz
+    │   └── A4_2.fq.gz
+    └── S2
+        ├── A3_1.fq.gz
+        ├── A3_1.unpared.fq.gz
+        ├── A3_2.fq.gz
+        └── A3_2.unpared.fq.gz
+    
+    splitdir -s '_\d\.fq\.gz' -f rawdata/
+    
+    tree rawdata2.split/
+    rawdata2.split/
+    ├── A2
+    │   ├── A2_1.fq.gz -> ../../rawdata2/S1/A2_1.fq.gz
+    │   └── A2_2.fq.gz -> ../../rawdata2/S1/A2_2.fq.gz
+    ├── A3
+    │   ├── A3_1.fq.gz -> ../../rawdata2/S2/A3_1.fq.gz
+    │   └── A3_2.fq.gz -> ../../rawdata2/S2/A3_2.fq.gz
+    └── A4
+        ├── A4_1.fq.gz -> ../../rawdata2/S1/A4_1.fq.gz
+        └── A4_2.fq.gz -> ../../rawdata2/S1/A4_2.fq.gz
+    
 
 ## Copyright
 
