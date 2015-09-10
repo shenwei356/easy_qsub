@@ -116,7 +116,7 @@ filename. More format supported: "{%}" for basename, "{^suffix}" for clipping
 https://github.com/shenwei356/easy_qsub
 ```
 
-splitdir
+cluster_files
 
 ```
 usage: cluster_files [-h] [-o OUTDIR] [-p PATTERN] [-k] [-m] [-f] indir
