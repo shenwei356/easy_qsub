@@ -14,15 +14,16 @@ args = None
 def parse_args():
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-    parser = argparse.ArgumentParser(description='split directory and cluster files by common prefix [V2.0]',
-                                     epilog="https://github.com/shenwei356/bio_scripts")
+    parser = argparse.ArgumentParser(description='clustering files by regular expression [V3.0]',
+                                     epilog="https://github.com/shenwei356/easy_qsub")
 
     parser.add_argument('indir', type=str, help='source directory')
-    parser.add_argument('-o', '--outdir', type=str, help='out directory [indir.split]')
-    parser.add_argument('-s', '--suffix', type=str,
-                        help='common suffix (regular expression) of files/dirs indir. ' +
+    parser.add_argument('-o', '--outdir', type=str, help='out directory [<indir>.cluster]')
+    parser.add_argument('-p', '--pattern', type=str,
+                        help='pattern (regular expression) of files in indir. ' +
                              'if not given, it will be the longest common substring of the files.' +
-                             'if no files matched in a dir, it will be ignored.')
+                             'GROUP (parenthese) should be in the regular expression. ' +
+                            'Captured group will be the cluster name. e.g. "(.+?)_\d\.fq\.gz"')
     parser.add_argument('-k', '--keep', action='store_true',
                         help='keep original dir structure')
     parser.add_argument('-m', '--mv', action='store_true',
@@ -35,7 +36,7 @@ def parse_args():
     args.indir = os.path.normpath(args.indir)
 
     if not args.outdir:
-        args.outdir = args.indir + '.split'
+        args.outdir = os.path.normpath(args.indir) + '.cluster'
     args.outdir = os.path.normpath(args.outdir)
 
     return args
@@ -61,25 +62,41 @@ if __name__ == '__main__':
 
     targets = list()
 
+    if args.pattern:
+        try:
+            pattern = re.compile(args.pattern)
+        except:
+            logging.error("illegal regular expression: {}".format(args.pattern))
+            sys.exit(1)
+
+        if not ('(' in args.pattern and ')' in args.pattern):
+            logging.warning('GROUP (parenthese) should be in the regular expression. ' +
+                            'Captured group will be the cluster name. e.g. "(.+?)_\d\.fq\.gz"')
+
     def walk_func(_, dir, files):
-        basenames = [os.path.basename(file) for file in files]
-        if not args.suffix:
+        basenames = [os.path.basename(file) for file in files if not file.startswith('.')]  # ignore .file
+
+        if not args.pattern:
             lcs = basenames[0]
             for file in basenames[1:]:
                 lcs = longest_common_substring(lcs, file)
-            args.suffix = lcs
+            lcs = lcs.lstrip('.')
+            if lcs == '':
+                return
+            clusters = set([lcs])
+            files = [os.path.join(dir, file) for file in files if lcs in file]
+        else:
+            clusters = set(pattern.findall(file)[0] for file in basenames if pattern.search(file))
+            if len(clusters) == 0:
+                return
+            files = [os.path.join(dir, file) for file in files if pattern.search(file)]
 
-        prefixes = set(re.sub(args.suffix + '$', '', file) for file in basenames if re.search(args.suffix + '$', file))
-        if len(prefixes) == 0:
-            return
-
-        files = [os.path.join(dir, file) for file in files if re.search(args.suffix + '$', file)]
-        targets.append([dir, prefixes, files])
+        targets.append([dir, clusters, files])
 
     os.path.walk(args.indir, walk_func, ())
 
     if len(targets) == 0:
-        logging.warning('no files match suffix: {}'.format(args.suffix))
+        logging.warning('no files match pattern: {}'.format(args.pattern))
         sys.exit(1)
 
     if os.path.exists(args.outdir):
@@ -88,8 +105,8 @@ if __name__ == '__main__':
         else:
             logging.warning("out directory exists: {}".format(args.outdir))
 
-    for dir, prefixes, files in targets:
-        for prefix in prefixes:
+    for dir, clusters, files in targets:
+        for cluster in clusters:
             if args.keep:
                 splits = os.path.split(dir)
                 if not splits[0] == '':
@@ -99,14 +116,13 @@ if __name__ == '__main__':
             else:
                 newdir = ''
 
-            outdir = os.path.join(args.outdir, newdir, prefix)
-
+            outdir = os.path.join(args.outdir, newdir, cluster)
             if os.path.exists(outdir):
                 shutil.rmtree(outdir)
             os.makedirs(outdir)
 
             for file in files:
-                if not re.match(prefix, os.path.basename(file)):
+                if not cluster in os.path.basename(file):
                     continue
                 if args.mv:  # moving file
                     shutil.move(file, outdir)

@@ -38,9 +38,9 @@ For example, for a file named "/path/reads.fq.gz":
 **[Update]** It also support runing commands locally with option ```-lp``` (parallelly) or ```-ls``` (serially) 
 for **multiple inputs**.
 
-**[Update]** To making best use of the support for multiple input, a script ```splitdir``` is added to
-split directory into multiple directories by creating symbolic links or moving files.
-**It's useful for programs which take directory as input.**
+**[Update 2015-09-10]** To make best use of the support for multiple input, a script ```cluster_files``` is added to
+cluster files into multiple directories by creating symbolic links or moving files.
+**It's useful for programs which take one directory as input.**
 
 Default template (```~/.easy_qsub/default.pbs```):
 
@@ -119,9 +119,9 @@ https://github.com/shenwei356/easy_qsub
 splitdir
 
 ```
-usage: splitdir [-h] [-o OUTDIR] [-s SUFFIX] [-k] [-m] [-f] indir
+usage: cluster_files [-h] [-o OUTDIR] [-p PATTERN] [-k] [-m] [-f] indir
 
-split directory and cluster files by common prefix [V2.0]
+clustering files by regular expression [V3.0]
 
 positional arguments:
   indir                 source directory
@@ -129,12 +129,13 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -o OUTDIR, --outdir OUTDIR
-                        out directory [indir.split]
-  -s SUFFIX, --suffix SUFFIX
-                        common suffix (regular expression) of files/dirs
-                        indir. if not given, it will be the longest common
-                        substring of the files.if no files matched in a dir,
-                        it will be ignored.
+                        out directory [<indir>.cluster]
+  -p PATTERN, --pattern PATTERN
+                        pattern (regular expression) of files in indir. if not
+                        given, it will be the longest common substring of the
+                        files. GROUP (parenthese) should be in the regular
+                        expression. Captured group will be the cluster name.
+                        e.g. "(.+?)_\d\.fq\.gz"
   -k, --keep            keep original dir structure
   -m, --mv              moving files instead of creating symbolic links
   -f, --force           force file overwriting, i.e. deleting existed out
@@ -180,17 +181,17 @@ It is slow by submiting jobs like example 2), handing A2_\*.fq.gz
 and then A3_\*.fq.gz. So we can split ```rawdata``` directory into multiple directories, and
 submit jobs for all directories.
 
-	splitdir -s '_\d\.fq\.gz' -f rawdata/
+	cluster_files -p '(.+?)_\d\.fq\.gz' rawdata
 	
-    tree rawdata.split/
-    rawdata.split/
+    tree rawdata.cluster/
+    rawdata.cluster/
     ├── A2
     │   ├── A2_1.fq.gz -> ../../rawdata/A2_1.fq.gz
     │   └── A2_2.fq.gz -> ../../rawdata/A2_2.fq.gz
     └── A3
         ├── A3_1.fq.gz -> ../../rawdata/A3_1.fq.gz
         └── A3_2.fq.gz -> ../../rawdata/A3_2.fq.gz
-    	
+
 	easy_qsub 'script.py {}' rawdata.split/*
 	
 4) Another example
@@ -212,10 +213,10 @@ submit jobs for all directories.
         ├── A3_2.fq.gz
         └── A3_2.unpared.fq.gz
     
-    splitdir -s '_\d\.fq\.gz' -f rawdata/
+    cluster_files -p '(.+?)_\d\.fq\.gz' rawdata2/
     
-    tree rawdata2.split/
-    rawdata2.split/
+    tree rawdata2.cluster/
+    rawdata2.cluster/
     ├── A2
     │   ├── A2_1.fq.gz -> ../../rawdata2/S1/A2_1.fq.gz
     │   └── A2_2.fq.gz -> ../../rawdata2/S1/A2_2.fq.gz
@@ -226,6 +227,21 @@ submit jobs for all directories.
         ├── A4_1.fq.gz -> ../../rawdata2/S1/A4_1.fq.gz
         └── A4_2.fq.gz -> ../../rawdata2/S1/A4_2.fq.gz
     
+    cluster_files -p '(.+?)_\d\.fq\.gz'  rawdata2/ -k -f  # keep original dir structure 
+    
+    tree rawdata2.cluster/
+    rawdata2.cluster/
+    ├── S1
+    │   ├── A2
+    │   │   ├── A2_1.fq.gz -> ../../../rawdata2/S1/A2_1.fq.gz
+    │   │   └── A2_2.fq.gz -> ../../../rawdata2/S1/A2_2.fq.gz
+    │   └── A4
+    │       ├── A4_1.fq.gz -> ../../../rawdata2/S1/A4_1.fq.gz
+    │       └── A4_2.fq.gz -> ../../../rawdata2/S1/A4_2.fq.gz
+    └── S2
+        └── A3
+            ├── A3_1.fq.gz -> ../../../rawdata2/S2/A3_1.fq.gz
+            └── A3_2.fq.gz -> ../../../rawdata2/S2/A3_2.fq.gz
 
 ## Copyright
 
