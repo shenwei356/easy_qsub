@@ -12,24 +12,39 @@ args = None
 
 
 def parse_args():
-    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+    logging.basicConfig(level=logging.INFO,
+                        format="[%(levelname)s] %(message)s")
 
-    parser = argparse.ArgumentParser(description='clustering files by regular expression [V3.0]',
-                                     epilog="https://github.com/shenwei356/easy_qsub")
+    parser = argparse.ArgumentParser(
+        description='clustering files by regular expression [V3.0]',
+        epilog="https://github.com/shenwei356/easy_qsub")
 
     parser.add_argument('indir', type=str, help='source directory')
-    parser.add_argument('-o', '--outdir', type=str, help='out directory [<indir>.cluster]')
-    parser.add_argument('-p', '--pattern', type=str,
-                        help='pattern (regular expression) of files in indir. ' +
-                             'if not given, it will be the longest common substring of the files.' +
-                             'GROUP (parenthese) should be in the regular expression. ' +
-                            'Captured group will be the cluster name. e.g. "(.+?)_\d\.fq\.gz"')
-    parser.add_argument('-k', '--keep', action='store_true',
+    parser.add_argument('-o',
+                        '--outdir',
+                        type=str,
+                        help='out directory [<indir>.cluster]')
+    parser.add_argument(
+        '-p',
+        '--pattern',
+        type=str,
+        help='pattern (regular expression) of files in indir. ' +
+        'if not given, it will be the longest common substring of the files.' +
+        'GROUP (parenthese) should be in the regular expression. ' +
+        'Captured group will be the cluster name. e.g. "(.+?)_\d\.fq\.gz"')
+    parser.add_argument('-k',
+                        '--keep',
+                        action='store_true',
                         help='keep original dir structure')
-    parser.add_argument('-m', '--mv', action='store_true',
+    parser.add_argument('-m',
+                        '--mv',
+                        action='store_true',
                         help='moving files instead of creating symbolic links')
-    parser.add_argument("-f", "--force", action="store_true",
-                        help='force file overwriting, i.e. deleting existed out directory')
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help='force file overwriting, i.e. deleting existed out directory')
 
     args = parser.parse_args()
 
@@ -54,7 +69,7 @@ def longest_common_substring(s1, s2):
                     x_longest = x
             else:
                 m[x][y] = 0
-    return s1[x_longest - longest: x_longest]
+    return s1[x_longest - longest:x_longest]
 
 
 if __name__ == '__main__':
@@ -66,15 +81,18 @@ if __name__ == '__main__':
         try:
             pattern = re.compile(args.pattern)
         except:
-            logging.error("illegal regular expression: {}".format(args.pattern))
+            logging.error("illegal regular expression: {}".format(
+                args.pattern))
             sys.exit(1)
 
         if not ('(' in args.pattern and ')' in args.pattern):
-            logging.warning('GROUP (parenthese) should be in the regular expression. ' +
-                            'Captured group will be the cluster name. e.g. "(.+?)_\d\.fq\.gz"')
+            logging.warning(
+                'GROUP (parenthese) should be in the regular expression. ' +
+                'Captured group will be the cluster name. e.g. "(.+?)_\d\.fq\.gz"')
 
     def walk_func(_, dir, files):
-        basenames = [os.path.basename(file) for file in files if not file.startswith('.')]  # ignore .file
+        basenames = [os.path.basename(file) for file in files
+                     if not file.startswith('.')]  # ignore .file
 
         if not args.pattern:
             lcs = basenames[0]
@@ -86,10 +104,12 @@ if __name__ == '__main__':
             clusters = set([lcs])
             files = [os.path.join(dir, file) for file in files if lcs in file]
         else:
-            clusters = set(pattern.findall(file)[0] for file in basenames if pattern.search(file))
+            clusters = set(pattern.findall(file)[0] for file in basenames
+                           if pattern.search(file))
             if len(clusters) == 0:
                 return
-            files = [os.path.join(dir, file) for file in files if pattern.search(file)]
+            files = [os.path.join(dir, file) for file in files
+                     if pattern.search(file)]
 
         targets.append([dir, clusters, files])
 
@@ -122,7 +142,7 @@ if __name__ == '__main__':
             os.makedirs(outdir)
 
             for file in files:
-                if not cluster in os.path.basename(file):
+                if pattern.findall(os.path.basename(file))[0] != cluster:
                     continue
                 if args.mv:  # moving file
                     shutil.move(file, outdir)
