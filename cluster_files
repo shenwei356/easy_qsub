@@ -89,6 +89,7 @@ if __name__ == '__main__':
             logging.warning(
                 'GROUP (parenthese) should be in the regular expression. ' +
                 'Captured group will be the cluster name. e.g. "(.+?)_\d\.fq\.gz"')
+            sys.exit(1)
 
     def walk_func(_, dir, files):
         basenames = [os.path.basename(file) for file in files
@@ -124,6 +125,7 @@ if __name__ == '__main__':
             shutil.rmtree(args.outdir)
         else:
             logging.warning("out directory exists: {}".format(args.outdir))
+            sys.exit(1)
 
     for dir, clusters, files in targets:
         for cluster in clusters:

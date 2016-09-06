@@ -1,6 +1,6 @@
 # easy_qsub
 
-Easily submitting multiple PBS jobs or running local jobs in parallel. Multiple input files supported. 
+Easily submitting multiple PBS jobs or running local jobs in parallel. Multiple input files supported.
 
 ## Submitting PBS jobs
 
@@ -22,8 +22,8 @@ echo run on node: $$HOSTNAME >&2
 
 $cmd
 ```
-Generated PBS scripts are saved in ```/tmp/easy_qsub-user```. 
-If jobs are submitted successfuly, PBS scripts will be moved to current directory. 
+Generated PBS scripts are saved in ```/tmp/easy_qsub-user```.
+If jobs are submitted successfuly, PBS scripts will be moved to current directory.
 If not, they will be removed.
 
 ## Support for multiple inputs
@@ -84,7 +84,7 @@ Another useful scene is to apply different jobs to a same dataset. One bad direc
     ├── B.stage1
     └── B.stage2
 
-A flexible structure can be organsize by `cluster_files`. 
+A flexible structure can be organsize by `cluster_files`.
 Instead of changing original directory structure, using links could be more clear and flexible.
 
     datasets
@@ -100,7 +100,7 @@ Instead of changing original directory structure, using links could be more clea
 
 
 ## Examples
-    
+
 1) Submit a single job
 
     easy_qsub 'ls -lh'
@@ -108,18 +108,18 @@ Instead of changing original directory structure, using links could be more clea
 2) Submit multiple jobs, runing fastqc for a lot of fq.gz files
 
     easy_qsub -n 8 -m 2GB 'mkdir -p QC/{%^.fq.gz}.fastqc; zcat {} | fastqc -o QC/{%^.fq.gz}.fastqc stdin' *.fq.gz
-   
+
 Excuted commands are:
 
 	mkdir -p QC/read_1.fastqc; zcat read_1.fq.gz | fastqc -o QC/read_1.fastqc stdin
 	mkdir -p QC/read_2.fastqc; zcat read_2.fq.gz | fastqc -o QC/read_2.fastqc stdin
-	
+
 Dry run with -vv
 
     easy_qsub -n 8 -m 2GB 'mkdir -p QC/{%^.fq.gz}.fastqc; zcat {} | fastqc -o QC/{%^.fq.gz}.fastqc stdin' *.fq.gz -vv
 
-3) Supposing a directory ```rawdata``` containing **paired files** as below. 
-    
+3) Supposing a directory ```rawdata``` containing **paired files** as below.
+
     $ tree rawdata
     rawdata
     ├── A2_1.fq.gz
@@ -136,12 +136,12 @@ Dry run with -vv
 And I have a program ```script.py```, which takes a directory as input and do some thing
 with the **paired files**. Command is like this, ```script.py dirA```.
 
-It is slow by submiting jobs like example 2), handing A2_\*.fq.gz and then A3_\*.fq.gz. 
-We can split ```rawdata``` directory into multiple directories (cluster files by the prefix), 
+It is slow by submiting jobs like example 2), handing A2_\*.fq.gz and then A3_\*.fq.gz.
+We can split ```rawdata``` directory into multiple directories (cluster files by the prefix),
 and submit jobs for all directories.
 
-	cluster_files -p '(.+?)_\d\.fq\.gz' rawdata -o rawdata.cluster
-	
+	cluster_files -p '(.+?)_\d\.fq\.gz$' rawdata -o rawdata.cluster
+
     tree rawdata.cluster/
     rawdata.cluster/
     ├── A2
@@ -152,10 +152,10 @@ and submit jobs for all directories.
         └── A3_2.fq.gz -> ../../rawdata/A3_2.fq.gz
 
 	easy_qsub 'script.py {}' rawdata.split/*
-	
+
 Another example (e.g. some assembler can handle unpaired reads too):
 
-    cluster_files -p '(.+?)_\d.*\.fq\.gz' rawdata -o rawdata.cluster2
+    cluster_files -p '(.+?)_\d.*\.fq\.gz$' rawdata -o rawdata.cluster2
 
 	tree rawdata.cluster2
     rawdata.cluster2
@@ -170,7 +170,7 @@ Another example (e.g. some assembler can handle unpaired reads too):
         ├── A3_2.fq.gz -> ../../rawdata/A3_2.fq.gz
         └── A3_2.unpaired.fq.gz -> ../../rawdata/A3_2.unpaired.fq.gz
 
-	
+
 4) Another example (complexed directory structure)
 
     tree rawdata2
@@ -189,9 +189,9 @@ Another example (e.g. some assembler can handle unpaired reads too):
         ├── A3_1.unpaired.fq.gz
         ├── A3_2.fq.gz
         └── A3_2.unpaired.fq.gz
-    
-    cluster_files -p '(.+?)_\d\.fq\.gz' rawdata2/
-    
+
+    cluster_files -p '(.+?)_\d\.fq\.gz$' rawdata2/
+
     tree rawdata2.cluster/
     rawdata2.cluster/
     ├── A2
@@ -203,9 +203,9 @@ Another example (e.g. some assembler can handle unpaired reads too):
     └── A4
         ├── A4_1.fq.gz -> ../../rawdata2/S1/A4_1.fq.gz
         └── A4_2.fq.gz -> ../../rawdata2/S1/A4_2.fq.gz
-    
-    cluster_files -p '(.+?)_\d\.fq\.gz'  rawdata2/ -k -f  # keep original dir structure 
-    
+
+    cluster_files -p '(.+?)_\d\.fq\.gz$'  rawdata2/ -k -f  # keep original dir structure 
+
     tree rawdata2.cluster/
     rawdata2.cluster/
     ├── S1
@@ -223,7 +223,7 @@ Another example (e.g. some assembler can handle unpaired reads too):
 
 ## Installation
 
-`easy_qsub` and `cluster_files` is a single script written in Python using standard library. 
+`easy_qsub` and `cluster_files` is a single script written in Python using standard library.
 It's Python 2/3 compatible, version 2.7 or later.
 
 You can simply save the script [easy_qsub](https://raw.githubusercontent.com/shenwei356/easy_qsub/master/easy_qsub)
@@ -231,11 +231,11 @@ and [cluster_files](https://raw.githubusercontent.com/shenwei356/easy_qsub/maste
 to directory included in environment PATH, e.g ```/usr/local/bin```.
 
 Or
-    
+
     git clone https://github.com/shenwei356/easy_qsub.git
     cd easy_qsub
     sudo copy easy_qsub cluster_files /usr/local/bin
-    
+
 ## Usage
 
 easy_qsub
