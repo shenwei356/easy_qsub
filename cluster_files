@@ -144,6 +144,7 @@ if __name__ == '__main__':
                 else:
                     logging.info("ignore existed directory: {}".format(outdir))
                     continue
+            logging.info("create new directory: {}".format(outdir))
             os.makedirs(outdir)
 
             for file in files:
