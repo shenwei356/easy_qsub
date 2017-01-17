@@ -306,6 +306,6 @@ optional arguments:
 
 ## Copyright
 
-Copyright (c) 2015, Wei Shen (shenwei356@gmail.com)
+Copyright (c) 2015-2017, Wei Shen (shenwei356@gmail.com)
 
 [MIT License](https://github.com/shenwei356/easy_qsub/blob/master/LICENSE)

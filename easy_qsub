@@ -43,8 +43,10 @@ def parse_args():
     parser.add_argument('files', type=str, nargs='*', help='input files')
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-lp', '--local_p', action='store_true', help='run commands locally, parallelly')
-    group.add_argument('-ls', '--local_s', action='store_true', help='run commands locally, serially')
+    group.add_argument('-lp', '--local_p', action='store_true',
+                       help='run commands locally, parallelly')
+    group.add_argument('-ls', '--local_s', action='store_true',
+                       help='run commands locally, serially')
 
     parser.add_argument('-N', '--name', type=str, default="easy_qsub",
                         help='job name')
@@ -91,7 +93,8 @@ def check_default_template():
 def generate_script(args):
     file_template = args.template
     if not os.path.exists(file_template):
-        logging.warning("Template file not found: {}. Use default template instead.".format(file_template))
+        logging.warning(
+            "Template file not found: {}. Use default template instead.".format(file_template))
         file_template = template_default
     template = Template(''.join(open(file_template, 'rt').readlines()))
 
@@ -119,7 +122,7 @@ def submit_job(args):
     output = ''
     try:
         if sys.version_info[0] == 3:
-            output = subprocess.getoutput(cmd) # bug: fail to catch the exception
+            output = subprocess.getoutput(cmd)  # bug: fail to catch the exception
         else:
             output = subprocess.check_output(cmd.split())
     except:

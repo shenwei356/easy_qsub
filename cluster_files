@@ -86,7 +86,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
         if not ('(' in args.pattern and ')' in args.pattern):
-            logging.warning(
+            logging.error(
                 'GROUP (parenthese) should be in the regular expression. ' +
                 'Captured group will be the cluster name. e.g. "(.+?)_\d\.fq\.gz"')
             sys.exit(1)
@@ -117,15 +117,14 @@ if __name__ == '__main__':
     os.path.walk(args.indir, walk_func, ())
 
     if len(targets) == 0:
-        logging.warning('no files match pattern: {}'.format(args.pattern))
+        logging.error('no files match pattern: {}'.format(args.pattern))
         sys.exit(1)
 
     if os.path.exists(args.outdir):
         if args.force:
             shutil.rmtree(args.outdir)
         else:
-            logging.warning("out directory exists: {}".format(args.outdir))
-            sys.exit(1)
+            logging.INFO("update existed directory: {}".format(args.outdir))
 
     for dir, clusters, files in targets:
         for cluster in clusters:
@@ -140,7 +139,10 @@ if __name__ == '__main__':
 
             outdir = os.path.join(args.outdir, newdir, cluster)
             if os.path.exists(outdir):
-                shutil.rmtree(outdir)
+                if args.force:
+                    shutil.rmtree(outdir)
+                else:
+                    continue
             os.makedirs(outdir)
 
             for file in files:
