@@ -124,7 +124,7 @@ if __name__ == '__main__':
         if args.force:
             shutil.rmtree(args.outdir)
         else:
-            logging.INFO("update existed directory: {}".format(args.outdir))
+            logging.info("update existed directory: {}".format(args.outdir))
 
     for dir, clusters, files in targets:
         for cluster in clusters:
@@ -142,6 +142,7 @@ if __name__ == '__main__':
                 if args.force:
                     shutil.rmtree(outdir)
                 else:
+                    logging.info("ignore existed directory: {}".format(outdir))
                     continue
             os.makedirs(outdir)
 
