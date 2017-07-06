@@ -1,0 +1,5 @@
+format	target	result
+{}	full path	a/b/read_1.fq.gz
+{%}	basename	read_1.fq.gz
+{^.fq.gz}	remove suffix from full path	a/b/read_1
+{%^.fq.gz}	remove suffix from basename	read_1
