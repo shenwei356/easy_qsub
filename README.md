@@ -49,6 +49,8 @@ This make it **easy to switch between cluster and local machine**.
 
 ## Best partner: ```cluster_files```
 
+New version: https://github.com/shenwei356/cluster_files
+
 To make best use of the support for multiple input, a script ```cluster_files``` is added to
 cluster files into multiple directories by creating symbolic links or moving files (See example 3,4).
 **It's useful for programs which take one directory as input.**
